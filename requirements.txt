@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+openai
+PyPDF2
+python-multipart
+python-dotenv

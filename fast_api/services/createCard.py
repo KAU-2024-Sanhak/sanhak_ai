@@ -1,20 +1,21 @@
-# createCard.py
-
 import os
 import openai
 from PyPDF2 import PdfReader
 from dotenv import load_dotenv
 import textwrap
+from io import BytesIO
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-def extract_text_from_pdf(pdf_file_path):
+def extract_text_from_pdf(pdf_file):
     """
     PDF 파일에서 텍스트를 추출하는 함수
     """
     try:
-        reader = PdfReader(pdf_file_path)
+        # 파일을 바이트로 읽어서 BytesIO로 감싼다.
+        pdf_bytes = pdf_file.file.read()
+        reader = PdfReader(BytesIO(pdf_bytes))
         text = ""
         for page in reader.pages:
             text += page.extract_text()
@@ -28,13 +29,14 @@ def generate_summary(user_input):
     사용자 입력과 PDF 내용을 기반으로 OpenAI API를 사용하여 요약을 생성하는 함수
     """
     # PDF에서 추가 데이터 추출
-    pdf_content = extract_text_from_pdf(user_input['pdf_file_path'])
+    pdf_content = extract_text_from_pdf(user_input['pdf_file'])
     
     # 프롬프트 생성
     prompt = f"""
     I want you to create a summary of a development experience card. The details are as follows:
     - Title of the experience: {user_input['title']}
-    - Development tools involved: {user_input['tools']}
+    - Development tools involved: {', '.join(user_input['tools'])}
+    - Position: {', '.join(user_input['position'])}
     - What I felt about the experience: {user_input['reflection']}
     - Additional experience data from PDF: {pdf_content}
     
