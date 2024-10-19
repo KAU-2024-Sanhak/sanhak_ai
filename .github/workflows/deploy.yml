@@ -29,6 +29,7 @@ jobs:
         host: ${{ secrets.EC2_HOST }}
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
+        passphrase: ${{ secrets.EC2_PASSPHRASE }}
         script: |
           cd /sanhak_ai
           git pull origin main
