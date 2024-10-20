@@ -1,4 +1,4 @@
-from .services.createCard import extract_text_from_pdf, generate_summary
+from .services.createCard import generate_summary
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 
@@ -18,7 +18,7 @@ async def create_summary(
     position: str = Form(...),  # position을 리스트로 받기
     tools: str = Form(...),  # tools를 리스트로 받기
     reflection: str = Form(...),
-    pdf_file: UploadFile = File(...)
+    pdf_file: str = Form(...)
 ):
     """
     개발 경험 카드 요약을 생성하는 엔드포인트
