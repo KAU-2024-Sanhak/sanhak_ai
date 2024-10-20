@@ -8,6 +8,7 @@ from io import BytesIO
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+'''
 def extract_text_from_pdf(pdf_file):
     """
     PDF 파일에서 텍스트를 추출하는 함수
@@ -23,13 +24,14 @@ def extract_text_from_pdf(pdf_file):
     except Exception as e:
         print(f"Error reading PDF: {str(e)}")
         raise e
+        '''
 
 def generate_summary(user_input):
     """
     사용자 입력과 PDF 내용을 기반으로 OpenAI API를 사용하여 요약을 생성하는 함수
     """
     # PDF에서 추가 데이터 추출
-    pdf_content = extract_text_from_pdf(user_input['pdf_file'])
+    #pdf_content = extract_text_from_pdf(user_input['pdf_file'])
     
     # 프롬프트 생성
     prompt = f"""
@@ -38,7 +40,7 @@ def generate_summary(user_input):
     - Development tools involved: {', '.join(user_input['tools'])}
     - Position: {', '.join(user_input['position'])}
     - What I felt about the experience: {user_input['reflection']}
-    - Additional experience data from PDF: {pdf_content}
+    - Additional experience data from PDF: {user_input['pdf_file']}
     
     Please Summarize with emphasis on the function and position of the project
         and organize it in one paragraph to help with the self-introduction letter
