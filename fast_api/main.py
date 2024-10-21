@@ -1,4 +1,4 @@
-from .services.createCard import generate_summary
+from .services.createCard.createCard import generate_summary
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 
