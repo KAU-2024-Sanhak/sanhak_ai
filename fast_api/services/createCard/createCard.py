@@ -37,10 +37,10 @@ def generate_summary(user_input):
     prompt = f"""
     I want you to create a summary of a development experience card. The details are as follows:
     - Title of the experience: {user_input['title']}
-    - Development tools involved: {', '.join(user_input['tools'])}
+    - Development tool involved: {', '.join(user_input['tool'])}
     - Position: {', '.join(user_input['position'])}
     - What I felt about the experience: {user_input['reflection']}
-    - Additional experience data from PDF: {user_input['pdf_file']}
+    - Additional experience data from PDF: {user_input['pdfText']}
     
     Please Summarize with emphasis on the function and position of the project
         and organize it in one paragraph to help with the self-introduction letter
