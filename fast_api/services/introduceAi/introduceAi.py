@@ -80,12 +80,25 @@ class ChatBotManager:
         return updated_statement
 
     def is_related_to_personal_statement(self, message):
-        # 메시지가 자기소개서 수정과 관련된 내용인지 판별
-        response = openai.Completion.create(
-            model="text-davinci-003",
-            prompt=f"다음 문장이 자기소개서 수정과 관련된 내용인지 '예' 또는 '아니오'로 답변하세요:\n\n{message}\n\n답변:",
-            max_tokens=1,
-            temperature=0
-        )
-        answer = response.choices[0].text.strip()
-        return answer == "예"
+        try:
+            # OpenAI API 호출
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",  # 또는 gpt-4 사용 가능
+                messages=[
+                    {"role": "system", "content": "너는 자기소개서 도우미야"},
+                    {"role": "user", "content": f"자기소개서와 관련 있는 질문이야? Please respond with only 'yes' or 'no'.\n\n{message}"}
+                ],
+                max_tokens=10,
+                temperature=0
+            )
+            # 응답 값 로깅 또는 출력
+            print(f"Model response: {response.choices[0].message['content']}")
+
+            # 응답을 소문자로 변환 후 확인
+            answer = response.choices[0].message["content"].strip().lower()
+            return answer in ["yes", "예"]
+        except Exception as e:
+            print(f"Error in is_related_to_personal_statement: {e}")
+            return False
+
+
