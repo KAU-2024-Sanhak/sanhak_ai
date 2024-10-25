@@ -16,7 +16,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 api_key = os.getenv("OPENAI_API_KEY")
 
-def init_chain(userInput):
+def general_init_chain(userInput):
     
     # ChatOpenAI 모델을 초기화합니다.
     llm = ChatOpenAI(model_name="gpt-4o", temperature=0.7)
