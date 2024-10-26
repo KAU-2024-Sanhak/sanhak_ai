@@ -1,5 +1,4 @@
 from .services.createCard.createCard import generate_summary
-from .services.introduceAi.introduceAi import ChatBotManager
 from .services.interviewAi.interviewAi import interview_init_chain
 from .services.generalAi.generalAi import general_init_chain
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Form, HTTPException
@@ -45,9 +44,7 @@ async def create_summary(userInput: UserInput):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-
-session = {"generalAi" : {}, "interviewAi" : {}, "intorduceAi" : {}}
+session = {"generalAi" : {}, "interviewAi" : {}, "introduceAi" : {}}
 
 # 세션 정리 함수
 def cleanup_expired_sessions(aiAssistant):
@@ -128,18 +125,38 @@ async def interview(userData: UserData):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
 
-# 챗봇 매니저 초기화
-chatbot_manager = ChatBotManager()
 
-@app.websocket("/chat")
-async def chat(websocket: WebSocket):
-    await websocket.accept()
-    session_id = await chatbot_manager.create_session(websocket)
+@app.post("/introduceAi")
+async def interview(userData: UserData):
+
+    userId = userData.userId
+    userInput = userData.userInput
+    question = userData.question
+
+    # post 요청이 들어올 때 마다 각 UserId에 대해 마지막 post요청보다 일정 시간 지날 경우 해당 userId 값 삭제
+    cleanup_expired_sessions("introduceAi") 
+
     try:
-        while True:
-            data = await websocket.receive_text()
-            response = await chatbot_manager.handle_message(session_id, data)
-            await websocket.send_text(response)
-    except WebSocketDisconnect:
-        chatbot_manager.remove_session(session_id)
+        # 질문에 대한 응답 생성
+        if userId not in session["introduceAi"]:
+            conversationAi = interview_init_chain(userInput=userInput)
+            response = conversationAi.invoke(question)
+            session["introduceAi"][userId] = {
+                'conversationAi': conversationAi,
+                'requestTime': datetime.now()
+            }
+
+            session["introduceAi"][userId]['conversationAi'] = conversationAi
+            session["introduceAi"][userId]['requestTime'] = datetime.now()
+
+        else:
+            response = session["introduceAi"][userId]['conversationAi'].invoke(question)
+            session["introduceAi"][userId]['requestTime'] = datetime.now()
+
+        return {"response": response}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
