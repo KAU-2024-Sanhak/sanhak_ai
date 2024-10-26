@@ -1,76 +1,51 @@
 import os
-import openai
-from PyPDF2 import PdfReader
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
 from dotenv import load_dotenv
-import textwrap
-from io import BytesIO
 
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+api_key = os.getenv("OPENAI_API_KEY")
 
-'''
-def extract_text_from_pdf(pdf_file):
-    """
-    PDF 파일에서 텍스트를 추출하는 함수
-    """
-    try:
-        # 파일을 바이트로 읽어서 BytesIO로 감싼다.
-        pdf_bytes = pdf_file.file.read()
-        reader = PdfReader(BytesIO(pdf_bytes))
-        text = ""
-        for page in reader.pages:
-            text += page.extract_text()
-        return text
-    except Exception as e:
-        print(f"Error reading PDF: {str(e)}")
-        raise e
-        '''
-
-def generate_summary(user_input):
+def generate_summary(userInput):
     """
     사용자 입력과 PDF 내용을 기반으로 OpenAI API를 사용하여 요약을 생성하는 함수
     """
-    # PDF에서 추가 데이터 추출
-    #pdf_content = extract_text_from_pdf(user_input['pdf_file'])
-    
+    llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
+
     # 프롬프트 생성
-    prompt = f"""
+    system_prompt = f"""
+    you create a summary of a development experience card.
     I want you to create a summary of a development experience card. The details are as follows:
-    - Title of the experience: {user_input['title']}
-    - Development tool involved: {', '.join(user_input['tool'])}
-    - Position: {', '.join(user_input['position'])}
-    - What I felt about the experience: {user_input['reflection']}
-    - Additional experience data from PDF: {user_input['pdfText']}
-    
+    - Title of the experience: {userInput.title}
+    - Development tool involved: {userInput.tool}
+    - Position: {userInput.position}
+    - What I felt about the experience: {userInput.reflection}
+    - Additional experience data from PDF: {userInput.pdfText}
+    """
+
+
+
+    # 대화형 프롬프트를 생성합니다. 이 프롬프트는 시스템 메시지, 이전 대화 내역, 그리고 사용자 입력을 포함합니다.
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", system_prompt),
+            ("human", "{input}"),
+        ]
+    )
+    request = """
     Please Summarize with emphasis on the function and position of the project
         and organize it in one paragraph to help with the self-introduction letter
         and answer in a soft tone so that the context of the sentence is naturally connected
         and answer Korean and Please write about 300 bytes
     """
 
-    # 메시지 컨텍스트 설정
-    context = [
-        {
-            'role': 'system',
-            'content': "you create a summary of a development experience card."
-        },
-        {
-            'role': 'user',
-            'content': prompt
-        }
-    ]
+    chain = prompt | llm | StrOutputParser()
+
 
     # OpenAI API 호출
-    response = openai.ChatCompletion.create(
-        model="gpt-4o",
-        messages=context,
-        temperature=0
-    )
+    response = chain.invoke(request)
 
-    summary = response.choices[0].message["content"]
-    
-    # 텍스트 래핑
-    wrapper = textwrap.TextWrapper(width=70, break_long_words=False, replace_whitespace=False)
-    wrapped_text = wrapper.fill(text=summary)
 
-    return wrapped_text
+    return response
