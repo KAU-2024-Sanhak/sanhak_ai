@@ -10,46 +10,6 @@ from datetime import datetime, timedelta
 
 app = FastAPI()
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
-
-@app.post("/createCard", response_class=JSONResponse)
-async def create_summary(
-    title: str = Form(...),
-    position: str = Form(...),  # position을 리스트로 받기
-    tool: str = Form(...),  # tools를 리스트로 받기
-    reflection: str = Form(...),
-    pdfText: str = Form(...)
-):
-    """
-    개발 경험 카드 요약을 생성하는 엔드포인트
-    """
-    
-    try:
-        position_list = ast.literal_eval(position)
-        tool_list = ast.literal_eval(tool)
-    except Exception as e:
-        return JSONResponse(content={"error": f"Invalid format for position or tool: {e}"}, status_code=400)
-
-    # 사용자 입력 구성
-    user_input = {
-        "title": title,
-        "position": position_list,
-        "tool": tool_list,
-        "reflection": reflection,
-        "pdfText": pdfText
-    }
-
-    # 요약 생성
-    summary = generate_summary(user_input)
-
-    return JSONResponse(content={"summary": summary})
-
 class UserInput(BaseModel):
     title: str  # 프로젝트 제목
     tool: list[str]  # 사용한 도구들
@@ -61,6 +21,28 @@ class UserData(BaseModel):
     userId: str  # 사용자 ID
     userInput: UserInput  # 사용자가 입력한 데이터
     question: str  # 질문
+
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+
+@app.get("/hello/{name}")
+async def say_hello(name: str):
+    return {"message": f"Hello {name}"}
+
+@app.post("/createCard")
+async def create_summary(userInput: UserInput):
+    """
+    개발 경험 카드 요약을 생성하는 엔드포인트
+    """
+    
+    try:
+        # 요약 생성
+        summary = generate_summary(userInput)
+
+        return {"summary": summary}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 session = {"generalAi" : {}, "interviewAi" : {}, "introduceAi" : {}}
 
