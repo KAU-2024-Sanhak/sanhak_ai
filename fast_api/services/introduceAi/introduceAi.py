@@ -1,104 +1,83 @@
-# app/services/introduceAi.py
-
-import uuid
-import openai
-import json
-from  ..createCard.createCard import generate_summary
-from dotenv import load_dotenv
 import os
-
+from dotenv import load_dotenv
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+import time
+from langchain_openai import ChatOpenAI
+from operator import itemgetter
+from langchain.memory import ConversationBufferMemory, ConversationSummaryMemory
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough, Runnable
+from langchain_core.output_parsers import StrOutputParser
 
-class ChatBotManager:
-    def __init__(self):
-        self.sessions = {}
+api_key = os.getenv("OPENAI_API_KEY")
 
-    async def create_session(self, websocket):
-        session_id = str(uuid.uuid4())
-        self.sessions[session_id] = {
-            "websocket": websocket,
-            "context": [],
-            "personal_statement": "",
-            "initialized": False
-        }
-        return session_id
+def introduce_init_chain(userInput):
+    
+    # ChatOpenAI 모델을 초기화합니다.
+    llm = ChatOpenAI(model_name="gpt-4o", temperature=0.7)
 
-    def remove_session(self, session_id):
-        if session_id in self.sessions:
-            del self.sessions[session_id]
+    # 대화 버퍼 메모리를 생성하고, 메시지 반환 기능을 활성화합니다.
+    memory = ConversationBufferMemory(return_messages=True, memory_key="chat_history")
 
-    async def handle_message(self, session_id, message):
-        session = self.sessions.get(session_id)
-        if not session["initialized"]:
-            # 초기화되지 않은 세션이면 사용자 입력을 받아 자기소개서를 생성
-            user_input = self.parse_initial_input(message)
-            if user_input:
-                personal_statement = self.generate_personal_statement(user_input)
-                session["personal_statement"] = personal_statement
-                session["context"].append({"role": "assistant", "content": personal_statement})
-                session["initialized"] = True
-                return personal_statement
-            else:
-                return "필수 정보를 JSON 형식으로 입력해 주세요: title, position, tool, reflection, pdfText"
-        else:
-            # 이미 생성된 자기소개서에 대한 수정 요청 처리
-            if self.is_related_to_personal_statement(message):
-                session["context"].append({"role": "user", "content": message})
-                updated_statement = self.update_personal_statement(session["context"])
-                session["personal_statement"] = updated_statement
-                session["context"].append({"role": "assistant", "content": updated_statement})
-                return updated_statement
-            else:
-                return "죄송하지만, 자기소개서와 관련된 질문에만 답변할 수 있습니다."
+    class MyConversationChain(Runnable):
 
-    def parse_initial_input(self, message):
-        # 메시지를 파싱하여 필요한 정보를 추출
-        try:
-            data = json.loads(message)
-            required_fields = ["title", "position","tool", "reflection", "pdfText"]
-            if all(field in data for field in required_fields):
-                return data
-            else:
-                return None
-        except json.JSONDecodeError:
-            return None
+        def __init__(self, llm, prompt, memory,input_key="input"):
 
-    def generate_personal_statement(self, user_input):
-        # generate_summary 함수를 사용하여 자기소개서 생성
-        summary = generate_summary(user_input)
-        return summary
+            self.prompt = prompt
+            self.memory = memory
+            self.input_key = input_key
 
-    def update_personal_statement(self, context):
-        # OpenAI API를 사용하여 대화 컨텍스트를 기반으로 자기소개서 업데이트
-        response = openai.ChatCompletion.create(
-            model="gpt-4o",
-            messages=context,
-            temperature=0.7
-        )
-        updated_statement = response.choices[0].message["content"]
-        return updated_statement
-
-    def is_related_to_personal_statement(self, message):
-        try:
-            # OpenAI API 호출
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",  # 또는 gpt-4 사용 가능
-                messages=[
-                    {"role": "system", "content": "너는 자기소개서 도우미야"},
-                    {"role": "user", "content": f"자기소개서와 관련 있는 질문이야? Please respond with only 'yes' or 'no'.\n\n{message}"}
-                ],
-                max_tokens=10,
-                temperature=0
+            self.chain = (
+                RunnablePassthrough.assign(
+                    chat_history=RunnableLambda(self.memory.load_memory_variables)
+                    | itemgetter(memory.memory_key)  # memory_key 와 동일하게 입력합니다.
+                )
+                | prompt
+                | llm
+                | StrOutputParser()
             )
-            # 응답 값 로깅 또는 출력
-            print(f"Model response: {response.choices[0].message['content']}")
 
-            # 응답을 소문자로 변환 후 확인
-            answer = response.choices[0].message["content"].strip().lower()
-            return answer in ["yes", "예"]
-        except Exception as e:
-            print(f"Error in is_related_to_personal_statement: {e}")
-            return False
+        def invoke(self, query, configs=None, **kwargs):
+            answer = self.chain.invoke({self.input_key: query})
+            self.memory.save_context(inputs={"human": query}, outputs={"ai": answer})
+            return answer
+        
+        # ChatOpenAI 모델을 초기화합니다.
+    llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
 
+    # 요약 메모리
+    memory = ConversationSummaryMemory(
+        llm=llm, return_messages=True, memory_key="chat_history"
+    )
 
+    qa_system_prompt = f""" 
+            너는 신입 개발자들의 자기소개서 작성을 돕는 AI 자기소개서 도우미야.
+            자기소개서와 관련 없는 질문이면, 자기소ㄷ개서와 관련된 질문을 다시해달라고 답변해줘. 
+            Use what you find to answer your questions. 
+            If you don't know the answer, say you don't know. 
+            The user's information is as follows.
+
+            - Title of the experience: {userInput.title}
+            - Development tool involved: {userInput.tool} 
+            - position: {userInput.position} 
+            - project content : {userInput.pdfText}
+            - What I felt about the experience: {userInput.reflection}
+
+            - Please, answer all word in Korean.
+
+            ## 답변 예시
+            답변 내용: 
+    """
+
+    # 대화형 프롬프트를 생성합니다. 이 프롬프트는 시스템 메시지, 이전 대화 내역, 그리고 사용자 입력을 포함합니다.
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", qa_system_prompt),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("human", "{input}"),
+        ]
+    )
+
+    conversationAi = MyConversationChain(llm, prompt, memory)
+
+    return conversationAi
