@@ -1,6 +1,7 @@
 from .services.createCard.createCard import generate_summary
 from .services.interviewAi.interviewAi import interview_init_chain
 from .services.generalAi.generalAi import general_init_chain
+from .services.introduceAi.introduceAi import introduce_init_chain
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Form, HTTPException
 from fastapi.responses import JSONResponse
 import ast
@@ -129,7 +130,7 @@ async def interview(userData: UserData):
 
 
 @app.post("/introduceAi")
-async def interview(userData: UserData):
+async def introduce(userData: UserData):
 
     userId = userData.userId
     userInput = userData.userInput
@@ -141,7 +142,7 @@ async def interview(userData: UserData):
     try:
         # 질문에 대한 응답 생성
         if userId not in session["introduceAi"]:
-            conversationAi = interview_init_chain(userInput=userInput)
+            conversationAi = introduce_init_chain(userInput=userInput)
             response = conversationAi.invoke(question)
             session["introduceAi"][userId] = {
                 'conversationAi': conversationAi,
