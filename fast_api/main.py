@@ -119,20 +119,20 @@ async def initialize(chatInitData: ChatInitData):
     UserInput = chatInitData.UserInput
     chatModel = chatInitData.chatModel
 
-    if chatModel == "generalAi":
+    if chatModel == "0":
         generalAi = general_init_chain(userInput=UserInput)
         session["generalAi"][userId] = {
             'conversationAi' : generalAi,
             'requestTime' : datetime.now()
         }
 
-    elif chatModel == "interviewAi":
+    elif chatModel == "1":
         interviewAi = interview_init_chain(userInput=UserInput)
         session['interviewAi'][userId] = {
             'conversationAi' : interviewAi,
             'requestTime' : datetime.now()
         }
-    elif chatModel == "introduceAi":
+    elif chatModel == "2":
         introduceAi = introduce_init_chain(userInput=UserInput)
         session['introduceAi'][userId] = {
             "conversationAi" : introduceAi,
