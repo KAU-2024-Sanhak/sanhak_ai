@@ -2,9 +2,7 @@ from .services.createCard.createCard import generate_summary
 from .services.interviewAi.interviewAi import interview_init_chain
 from .services.generalAi.generalAi import general_init_chain
 from .services.introduceAi.introduceAi import introduce_init_chain
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Form, HTTPException
-from fastapi.responses import JSONResponse
-import ast
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 
@@ -18,10 +16,38 @@ class UserInput(BaseModel):
     reflection: str  # 느낀 점
     pdfText: str # pdf 내용
 
-class UserData(BaseModel):
+'''
+채팅 입력 데이터 형태
+{
+    "userId" : ,
+    "question" : ,
+}
+'''
+
+class ChatData(BaseModel):
     userId: str  # 사용자 ID
-    userInput: UserInput  # 사용자가 입력한 데이터
     question: str  # 질문
+
+'''
+서버로 부터 받는 채팅 init 데이터 형태
+{
+    "userId" : ,
+    "userInput" : {
+                    "title" : ,
+                    "tool" : ,
+                    "position" : ,
+                    "reflection" : ,
+                    "pdfText" : ,
+    }
+    "chatModel" : "0(generalAi) or 1(interviewAi) or 2(introduceAi)" -> 0,1,2 중에 하나 받음
+}
+'''
+
+class ChatInitData(BaseModel):
+    userId: str 
+    UserInput: UserInput
+    chatModel: str
+
 
 @app.get("/")
 async def root():
@@ -45,6 +71,31 @@ async def create_summary(userInput: UserInput):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+"""
+session
+{
+    generalAi : {
+                    userId :{
+                              conversationAi :,
+                              requestTime : ,  
+                            }
+                  },
+    interviewAi : {
+                    userId :{
+                              conversationAi :,
+                              requestTime : ,  
+                            }
+                  },
+    introduceAi : {
+                    userId:{
+                              conversationAi :,
+                              requestTime : ,  
+                            }
+                  },
+
+}
+"""
+
 session = {"generalAi" : {}, "interviewAi" : {}, "introduceAi" : {}}
 
 # 세션 정리 함수
@@ -62,33 +113,45 @@ def cleanup_expired_sessions(aiAssistant):
         del session[aiAssistant][user_id]
         print(f"Session for {user_id} has been removed due to inactivity")
 
-@app.post("/generalAi")
-async def general(userData: UserData):
+@app.post("/initialize")
+async def initialize(chatInitData: ChatInitData):
+    userId = chatInitData.userId
+    UserInput = chatInitData.UserInput
+    chatModel = chatInitData.chatModel
 
-    userId = userData.userId
-    userInput = userData.userInput
-    question = userData.question
+    if chatModel == "generalAi":
+        generalAi = general_init_chain(userInput=UserInput)
+        session["generalAi"][userId] = {
+            'conversationAi' : generalAi,
+            'requestTime' : datetime.now()
+        }
+
+    elif chatModel == "interviewAi":
+        interviewAi = interview_init_chain(userInput=UserInput)
+        session['interviewAi'][userId] = {
+            'conversationAi' : interviewAi,
+            'requestTime' : datetime.now()
+        }
+    elif chatModel == "introduceAi":
+        introduceAi = introduce_init_chain(userInput=UserInput)
+        session['introduceAi'][userId] = {
+            "conversationAi" : introduceAi,
+            "requestTime" : datetime.now()
+        }
+
+@app.post("/generalAi")
+async def general(chatData: ChatData):
+
+    userId = chatData.userId
+    question = chatData.question
 
     # post 요청이 들어올 때 마다 각 UserId에 대해 마지막 post요청보다 일정 시간 지날 경우 해당 userId 값 삭제
     cleanup_expired_sessions("generalAi") 
 
     try:
         # 질문에 대한 응답 생성
-        if userId not in session["generalAi"]:
-            conversationAi = general_init_chain(userInput=userInput)
-            response = conversationAi.invoke(question)
-            session["generalAi"][userId] = {
-                'conversationAi': conversationAi,
-                'requestTime': datetime.now()
-            }
-
-            session["generalAi"][userId]['conversationAi'] = conversationAi
-            session["generalAi"][userId]['requestTime'] = datetime.now()
-
-        else:
-            response = session["generalAi"][userId]['conversationAi'].invoke(question)
-            session["generalAi"][userId]['requestTime'] = datetime.now()
-
+        response = session["generalAi"][userId]['conversationAi'].invoke(question)
+        session["generalAi"][userId]['requestTime'] = datetime.now()
         return {"response": response}
     
     except Exception as e:
@@ -96,31 +159,18 @@ async def general(userData: UserData):
 
 
 @app.post("/interviewAi")
-async def interview(userData: UserData):
+async def interview(chatData: ChatData):
 
-    userId = userData.userId
-    userInput = userData.userInput
-    question = userData.question
+    userId = chatData.userId
+    question = chatData.question
 
     # post 요청이 들어올 때 마다 각 UserId에 대해 마지막 post요청보다 일정 시간 지날 경우 해당 userId 값 삭제
     cleanup_expired_sessions("interviewAi") 
 
     try:
         # 질문에 대한 응답 생성
-        if userId not in session["interviewAi"]:
-            conversationAi = interview_init_chain(userInput=userInput)
-            response = conversationAi.invoke(question)
-            session["interviewAi"][userId] = {
-                'conversationAi': conversationAi,
-                'requestTime': datetime.now()
-            }
-
-            session["interviewAi"][userId]['conversationAi'] = conversationAi
-            session["interviewAi"][userId]['requestTime'] = datetime.now()
-
-        else:
-            response = session["interviewAi"][userId]['conversationAi'].invoke(question)
-            session["interviewAi"][userId]['requestTime'] = datetime.now()
+        response = session["interviewAi"][userId]['conversationAi'].invoke(question)
+        session["interviewAi"][userId]['requestTime'] = datetime.now()  
 
         return {"response": response}
     
@@ -130,31 +180,18 @@ async def interview(userData: UserData):
 
 
 @app.post("/introduceAi")
-async def introduce(userData: UserData):
+async def introduce(chatData: ChatData):
 
-    userId = userData.userId
-    userInput = userData.userInput
-    question = userData.question
+    userId = chatData.userId
+    question = chatData.question
 
     # post 요청이 들어올 때 마다 각 UserId에 대해 마지막 post요청보다 일정 시간 지날 경우 해당 userId 값 삭제
     cleanup_expired_sessions("introduceAi") 
 
     try:
         # 질문에 대한 응답 생성
-        if userId not in session["introduceAi"]:
-            conversationAi = introduce_init_chain(userInput=userInput)
-            response = conversationAi.invoke(question)
-            session["introduceAi"][userId] = {
-                'conversationAi': conversationAi,
-                'requestTime': datetime.now()
-            }
-
-            session["introduceAi"][userId]['conversationAi'] = conversationAi
-            session["introduceAi"][userId]['requestTime'] = datetime.now()
-
-        else:
-            response = session["introduceAi"][userId]['conversationAi'].invoke(question)
-            session["introduceAi"][userId]['requestTime'] = datetime.now()
+        response = session["introduceAi"][userId]['conversationAi'].invoke(question)
+        session["introduceAi"][userId]['requestTime'] = datetime.now()  
 
         return {"response": response}
     
