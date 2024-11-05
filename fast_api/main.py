@@ -2,6 +2,7 @@ from .services.createCard.createCard import generate_summary
 from .services.interviewAi.interviewAi import interview_init_chain
 from .services.generalAi.generalAi import general_init_chain
 from .services.introduceAi.introduceAi import introduce_init_chain
+from .services.languageTest.languageTest import generate_test, convert_to_dict
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from datetime import datetime, timedelta
@@ -195,6 +196,24 @@ async def introduce(chatData: ChatData):
 
         return {"response": response}
     
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+# 언어에 대한 진행도 판단의 테스트를 위한 데이터
+class TestInput(BaseModel):
+    language: str 
+    main: str 
+    sub: list 
+
+@app.post("/createTest")
+async def create_summary(testInput: TestInput):
+    try:
+        # 요약 생성
+        questions = generate_test(testInput)
+        questions = convert_to_dict(testInput=testInput, response=questions)
+
+        return questions
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
