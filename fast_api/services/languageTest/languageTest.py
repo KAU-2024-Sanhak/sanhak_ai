@@ -33,39 +33,16 @@ def generate_test(testInput):
             ("human", "{input}"),
         ]
     )
+    
     request = """
-    주어진 언어와 주 목차, 세부 목차에 해당하는 객관식 문제 총 5개와 해당 답변을 만들어줘.
+    주어진 언어와 주 목차, 세부 목차에 해당하는 객관식 문제 총 1개와 해당 답변을 만들어줘.
     각 객관식은 4개의 선택지로 구성되어 있어야 해. answer는 options의 번호로 해줘.
     답변 자체를 바로 dictionary 형식으로 변환 가능하도록 해줘. 즉, json 이런 단어는 포함안되도록 해줘.
 
     {
-        "questions": [
-            {
-            "question": "",
-            "options": [],
-            "answer": 
-            },
-            {
-            "question": "",
-            "options": [],
-            "answer": 
-            },
-            {
-            "question": "",
-            "options": [],
-            "answer": 
-            },
-            {
-            "question": "",
-            "options": [],
-            "answer": 
-            },
-            {
-            "question": "",
-            "options": [],
-            "answer": 
-            }
-        ]
+        "question": "",
+        "options": [],
+        "answer": 
     }
     """
 
