@@ -3,6 +3,7 @@ from .services.interviewAi.interviewAi import interview_init_chain
 from .services.generalAi.generalAi import general_init_chain
 from .services.introduceAi.introduceAi import introduce_init_chain
 from .services.languageTest.languageTest import generate_test, convert_to_dict
+from .services.recommend.recommend import recommend_companies_w2v
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from datetime import datetime, timedelta
@@ -217,3 +218,14 @@ async def create_summary(testInput: TestInput):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+class SkillInput(BaseModel):
+    skills: list[str]
+
+@app.post("/recommendCompanies")
+async def recommend_companies(skill_input: SkillInput):
+    try:
+        recommendations = recommend_companies_w2v(skill_input.skills)
+        return recommendations.to_dict(orient='records')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
