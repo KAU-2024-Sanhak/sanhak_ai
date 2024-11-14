@@ -1,0 +1,82 @@
+company_names,result,extracted_skills
+네이버(App),1,Swift
+네이버(Android),1,"Java, Kotlin"
+페이타랩(패스오더),1,"Kotlin, Java, Android Studio"
+페이타랩(패스오더),1,"Xcode, Swift"
+샤플앤컴퍼니,1,
+센디,1,"R, Swift, SwiftUI"
+애즈위메이크,1,Kotlin
+센디,1,"Kotlin, R"
+비모소프트,1,"Kotlin, R, Android Studio, Jenkins"
+비모소프트,1,"R, Swift, Jenkins, Xcode"
+제틱에이아이,1,Python
+스쿨버스,1,"R, Flutter"
+페이타랩(패스오더),1,"Kotlin, Java, Android Studio"
+모토브,1,"React, R, Flutter, Tensorflow"
+팀42,1,Swift
+넛지헬스케어(캐시워크),1,"R, Swift, SwiftUI, React, Xcode"
+넛지헬스케어(캐시워크),1,"Kotlin, R"
+리비바이오,1,"Kotlin, Java, R"
+넛지헬스케어(캐시워크),1,"R, Flutter"
+펄어비스,2,"Electron, R, TypeScript, JavaScript, Java, CSS, React, HTML"
+페이타랩(패스오더),2,"R, Docker, Webpack, TypeScript, JavaScript, Java, CSS, Angular, React, HTML"
+한국메디컬헬스케어,2,"React, R, CSS, HTML"
+에고이즘,2,
+엘리스,2,"Jest, R, TypeScript, ESLint, JavaScript, Java, CSS, Cypress, React, HTML"
+텐핑거스(10fingers),2,"React, R, Java"
+비더에그,2,"R, Flutter, Next.js, JavaScript, Java, React, Recoil"
+엘리스,2,"Jest, R, Docker, Next.js, TypeScript, ESLint, JavaScript, Kubernetes, Java, Azure, CSS, Cypress, React, HTML, AWS"
+페이타랩(패스오더),2,"Kotlin, Java, Android Studio"
+구름,2,"R, Webpack, TypeScript, JavaScript, Java, React"
+어크로스비,2,"Express.js, Kotlin, R, TypeScript, Redis, Spring, JavaScript, Java, CSS, PostgreSQL, React, Vue.js, Nest.js, HTML, AWS"
+페이타랩(패스오더),2,"Xcode, Swift"
+펜타시큐리티,2,"R, Webpack, MySQL, Python, JavaScript, PHP, Java, Jenkins, Vue.js"
+메타몬스터,2,"R, Next.js, TypeScript, Redux, JavaScript, Java, CSS, MobX, React, HTML"
+가온프라임,2,"R, MongoDB, Python, Java, Tailwind, React, AWS"
+그래비티랩스,2,"Kotlin, R, Swift, MongoDB, TypeScript, React"
+호패,2,"Jest, R, Next.js, Webpack, TypeScript, JavaScript, Java, Tailwind, CSS, Cypress, Axios, React, Vite"
+구름,2,"R, MongoDB, JavaScript, Java, React, AWS"
+교보문고,3,"Tensorflow, Python"
+에이비일팔공(AB180),3,"R, Tableau, Python"
+쓰리빌리언(3Billion),3,R
+씨디알아이(CDRI),3,"R, Pytorch, Tensorflow"
+데이터라이즈,3,"R, Spark, Hadoop, Python"
+틸다,3,
+북아이피스,3,"R, Python, PostgreSQL, Pytorch, AWS S3, GCP, AWS"
+엘리스,3,
+에이비일팔공(AB180),3,"R, Hadoop, Python, Spark, Tensorflow"
+플래티어,3,"R, Tableau, Python"
+에스투더블유(S2W),3,"R, MongoDB, Python"
+비주얼캠프,3,"R, Python"
+파인더스에이아이,3,
+딥핑소스,3,"Scipy, R, Pytorch"
+두잇 (Doeat),3,"React, R, Tableau, Python"
+에프앤가이드,3,"R, Python"
+인티그리트,3,"R, Pytorch"
+넛지헬스케어(캐시워크),3,"R, Tableau, Python, GCP, AWS"
+바이오리서치에이아이,3,"Apache, Python, AWS"
+스카이랩스(SkyLabs),3,"Tensorflow, Python"
+토스플레이스,4,"Kotlin, R, Hibernate, MySQL, Redis, ArgoCD, Grafana, Spring, Java, Kafka, Kubernetes"
+마이리얼트립,4,"Kotlin, R, Hibernate, Redis, Spring, Java, Kafka, AWS"
+메이데이파트너스,4,"R, MySQL, Spring, Java, Azure, Spring Boot, AWS"
+고요에이아이,4,"Kotlin, R, Spring, Java, GCP, AWS"
+하이픈,4,"R, Flask, Django, Python, GCP, AWS"
+비모소프트,4,"Kotlin, Docker, R, Hadoop, Python, Spring, Kubernetes, Java, Azure, Spark, AWS"
+미리디,4,"R, Docker, Python, Spring, Java, Spring Boot, PostgreSQL, AWS"
+마야크루,4,"Express.js, R, Docker, MongoDB, TypeScript, MySQL, JavaScript, Kubernetes, Java, GCP, AWS"
+헥슬란트,4,"JavaScript, R, Java, TypeScript"
+에스디바이오센서,4,"Docker, Spring, Kubernetes, Java, AWS"
+아이티이지,4,"R, Docker, Python, PHP, Java, CSS, HTML"
+룩코,4,"R, Docker, MongoDB, Redis, Grafana, Python, Java, Kafka, GCP, AWS"
+엘리스,4,"R, Flask, Docker, Django, MongoDB, Redis, Python, Apache, PostgreSQL, Kafka"
+퍼즐벤처스(PuzzlesVenturesCo.),4,"Java, AWS"
+제제컴즈,4,
+백두테크놀로지스,4,"R, Java, Flask, Python"
+잉카엔트웍스,5,R
+이스트소프트(ESTsoft),5,
+이스트소프트(ESTsoft),5,
+엘리스,5,
+인스피언,5,
+아우토크립트,5,R
+엔에스에이치씨(NSHC),5,"R, Python"
+피어테크(지닥),5,AWS
