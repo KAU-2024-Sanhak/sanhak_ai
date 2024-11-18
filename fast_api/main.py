@@ -59,17 +59,25 @@ async def root():
 async def say_hello(name: str):
     return {"message": f"Hello {name}"}
 
+
+class CardUserInput(BaseModel):
+    title: str  # 프로젝트 제목
+    tool: list[str]  # 사용한 도구들
+    position: list[str]  # 역할
+    reflection: str  # 느낀 점
+    pdfUrl: str # pdf 내용
+
 @app.post("/createCard")
-async def create_summary(userInput: UserInput):
+async def create_summary(cardUserInput: CardUserInput):
     """
     개발 경험 카드 요약을 생성하는 엔드포인트
     """
     
     try:
         # 요약 생성
-        summary = generate_summary(userInput)
+        summary, pdfText = generate_summary(cardUserInput)
 
-        return {"summary": summary}
+        return {"summary": summary, "pdfText" : pdfText}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

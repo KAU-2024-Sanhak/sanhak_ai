@@ -2,27 +2,32 @@ import os
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from extractTextFromPdf import extract_all_text_from_pdf
 
 from dotenv import load_dotenv
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 
-def generate_summary(userInput):
+def generate_summary(cardUserInput):
     """
     사용자 입력과 PDF 내용을 기반으로 OpenAI API를 사용하여 요약을 생성하는 함수
     """
+
+    pdf_text = extract_all_text_from_pdf(cardUserInput.pdfUrl)
+
+
     llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
 
     # 프롬프트 생성
     system_prompt = f"""
     you create a summary of a development experience card.
     I want you to create a summary of a development experience card. The details are as follows:
-    - Title of the experience: {userInput.title}
-    - Development tool involved: {userInput.tool}
-    - Position: {userInput.position}
-    - What I felt about the experience: {userInput.reflection}
-    - Additional experience data from PDF: {userInput.pdfText}
+    - Title of the experience: {cardUserInput.title}
+    - Development tool involved: {cardUserInput.tool}
+    - Position: {cardUserInput.position}
+    - What I felt about the experience: {cardUserInput.reflection}
+    - Additional experience data from PDF: {pdf_text}
     """
 
 
@@ -48,4 +53,4 @@ def generate_summary(userInput):
     response = chain.invoke(request)
 
 
-    return response
+    return response, pdf_text
