@@ -99,11 +99,12 @@ def extract_image_from_pdf(pdf_path):
     return total_string
 
 
-def extract_all_text_from_pdf(url):
+def extract_all_text_from_pdf(url, use_ocr=False):
     pdf_path = download_pdf(url)
-
+    text, image_text = "", ""
     text = extract_text(pdf_path)
-    image_text = extract_image_from_pdf(pdf_path)
+    if use_ocr:
+        image_text = extract_image_from_pdf(pdf_path)
 
     total_text = f"Text:\n{text}\n Image text:\n{image_text}"
 
