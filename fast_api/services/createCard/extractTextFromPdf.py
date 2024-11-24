@@ -1,9 +1,13 @@
-import aspose.pdf as ap
-import aspose.pydrawing as drawing
 import fitz  # PyMuPDF
-
-import os
+import base64
 import requests
+import os
+from dotenv import load_dotenv
+
+# 환경 변수 로드
+load_dotenv()
+api_key = os.getenv("GOOGLE_API_KEY")  # Google Vision API 키를 환경 변수에서 가져옴
+
 
 def download_pdf(url):
     # PDF 다운로드
@@ -14,100 +18,100 @@ def download_pdf(url):
             f.write(response.content)
         print("PDF 다운로드 완료!")
     else:
-        print("PDF 다운로드 실패:", response.status_code)
-    
-    return pdf_path 
+        raise Exception(f"PDF 다운로드 실패: {response.status_code}")
+    return pdf_path
 
 def extract_text(pdf_path):
     doc = fitz.open(pdf_path)
     total_text = ""
     for page_num in range(len(doc)):
-        page = doc.load_page(page_num)
+        page = doc[page_num]
         text = page.get_text("text")
-        total_text += f"\n {text}"
-    
+        total_text += f"\n{text}"
     return total_text
 
-def ocr_space_file(filename, language='kor'):
+
+def extract_images_from_pdf(pdf_path):
     """
-    This function performs OCR on an image file using OCR.space API.
-    
-    :param filename: Path to the image file
-    :param api_key: Your OCR.space API key (You can get it from https://ocr.space/ocrapi)
-    :param language: The language code (default is 'kor' for Korean)
-    :return: The extracted text from the image
+    PDF에서 이미지를 추출 (PyMuPDF 사용)
     """
-
-    api_key='7231cb8c6388957'
-
-    with open(filename, 'rb') as f:
-        img_data = f.read()
-
-    # Set up the API request
-    url = 'https://api.ocr.space/parse/image'
-    headers = {'apikey': api_key}
-    payload = {
-        'language': language,
-        'filetype': 'PNG'  # Manually specify the file type if needed (e.g., PNG, JPG)
-    }
-    files = {
-        'file': img_data
-    }
-
-    try:
-        response = requests.post(url, headers=headers, data=payload, files=files)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        return f"Request failed: {e}"
-
-    # Parse the JSON response
-    result = response.json()
-
-    if result['OCRExitCode'] == 1:
-        # If OCR is successful, extract the parsed text
-        return result['ParsedResults'][0]['ParsedText']
-    else:
-        # In case of an error
-        return f"Error: {result['ErrorMessage']}"
-
-def extract_image_from_pdf(pdf_path):
-
-    # PDF 로드
-    document = ap.Document(pdf_path)
-
+    doc = fitz.open(pdf_path)
     image_counter = 1
-    image_name = "image_{counter}.png"
+    extracted_images = []
 
-    total_string = ""
+    for page_number in range(len(doc)):
+        page = doc[page_number]
+        for img_index, img in enumerate(page.get_images(full=True)):
+            xref = img[0]
+            base_image = doc.extract_image(xref)
+            image_bytes = base_image["image"]
+            image_ext = base_image["ext"]
+            image_filename = f"page{page_number+1}_img{img_index+1}.{image_ext}"
 
-    # 모든 페이지 반복
-    for page in document.pages:
-        # 페이지의 이미지 반복
-        for image in page.resources.images: 
-                # 이미지를 저장할 메모리 스트림 객체 생성
-                with open(image_name.format(counter=image_counter), "wb") as stream:
-                    # 이미지 저장
-                    image.save(stream, drawing.imaging.ImageFormat.png)
-                
-                img_name = f"image_{image_counter}.png"
-                extracted_text = ocr_space_file(img_name)
-                total_string = total_string + ' \n ' + extracted_text
-                os.remove(img_name)
-
-                image_counter = image_counter + 1
-        
-    return total_string
+            with open(image_filename, "wb") as f:
+                f.write(image_bytes)
+            print(f"이미지 저장 완료: {image_filename}")
+            extracted_images.append(image_filename)
+    
+    return extracted_images
 
 
-def extract_all_text_from_pdf(url, use_ocr=False):
-    pdf_path = download_pdf(url)
-    text, image_text = "", ""
-    text = extract_text(pdf_path)
-    if use_ocr:
-        image_text = extract_image_from_pdf(pdf_path)
+def ocr_google_api(image_path):
+    """
+    Google Vision API를 사용하여 이미지에서 텍스트 추출
+    """
+    with open(image_path, "rb") as image_file:
+        base64_image = base64.b64encode(image_file.read()).decode("utf-8")
 
-    total_text = f"Text:\n{text}\n Image text:\n{image_text}"
+    url = f"https://vision.googleapis.com/v1/images:annotate?key={api_key}"
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "requests": [
+            {
+                "image": {"content": base64_image},
+                "features": [{"type": "TEXT_DETECTION"}],
+            }
+        ]
+    }
 
-    os.remove(pdf_path)
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        response_data = response.json()
+        if "textAnnotations" in response_data["responses"][0]:
+            return response_data["responses"][0]["textAnnotations"][0]["description"]
+        else:
+            return "No text found in image."
+    else:
+        raise Exception(f"API Error: {response.status_code}, {response.text}")
 
-    return total_text
+
+def extract_all_text_from_pdf(url, use_ocr=True):
+    """
+    PDF URL에서 텍스트 및 이미지 기반 OCR 수행
+    """
+    try:
+        pdf_path = download_pdf(url)
+        text = extract_text_from_pdf(pdf_path)
+        image_text = ""
+
+        if use_ocr:
+            extracted_images = extract_images_from_pdf(pdf_path)
+            for image in extracted_images:
+                try:
+                    image_text += f"\n{ocr_google_api(image)}"
+                    os.remove(image)  # 처리 후 임시 이미지 파일 삭제
+                except Exception as e:
+                    print(f"이미지 처리 실패: {e}")
+                    continue
+
+        # PDF 파일 삭제
+        os.remove(pdf_path)
+
+        total_text = f"Text:\n{text}\nImage text:\n{image_text}"
+        return total_text
+
+
+
+
+    except Exception as e:
+        return f"오류 발생: {e}"
