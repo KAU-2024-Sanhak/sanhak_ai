@@ -4,13 +4,14 @@ import requests
 import os
 from dotenv import load_dotenv
 
-# 환경 변수 로드
 load_dotenv()
-api_key = os.getenv("GOOGLE_API_KEY")  # Google Vision API 키를 환경 변수에서 가져옴
+api_key = os.getenv("GOOGLE_API_KEY")
 
 
 def download_pdf(url):
-    # PDF 다운로드
+    """
+    URL에서 PDF 파일 다운로드
+    """
     response = requests.get(url)
     pdf_path = "downloaded_file.pdf"
     if response.status_code == 200:
@@ -21,7 +22,11 @@ def download_pdf(url):
         raise Exception(f"PDF 다운로드 실패: {response.status_code}")
     return pdf_path
 
-def extract_text(pdf_path):
+
+def extract_text_from_pdf(pdf_path):
+    """
+    PDF에서 텍스트 추출 (PyMuPDF 사용)
+    """
     doc = fitz.open(pdf_path)
     total_text = ""
     for page_num in range(len(doc)):
@@ -109,9 +114,6 @@ def extract_all_text_from_pdf(url, use_ocr=True):
 
         total_text = f"Text:\n{text}\nImage text:\n{image_text}"
         return total_text
-
-
-
 
     except Exception as e:
         return f"오류 발생: {e}"
