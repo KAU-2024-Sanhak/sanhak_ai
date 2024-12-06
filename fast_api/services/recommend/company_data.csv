@@ -72,11 +72,11 @@ company_names,result,extracted_skills
 퍼즐벤처스(PuzzlesVenturesCo.),4,"Java, AWS"
 제제컴즈,4,
 백두테크놀로지스,4,"R, Java, Flask, Python"
-잉카엔트웍스,5,R
-이스트소프트(ESTsoft),5,
-이스트소프트(ESTsoft),5,
-엘리스,5,
+잉카엔트웍스,5,"R, C"
+이스트소프트(ESTsoft),5,C
+이스트소프트(ESTsoft),5,C
+엘리스,5,C
 인스피언,5,
-아우토크립트,5,R
-엔에스에이치씨(NSHC),5,"R, Python"
-피어테크(지닥),5,AWS
+아우토크립트,5,"R, C"
+엔에스에이치씨(NSHC),5,"R, Python, C"
+피어테크(지닥),5,"AWS, C"
